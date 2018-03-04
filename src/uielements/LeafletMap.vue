@@ -1,22 +1,22 @@
 <template>
-  <div id="leaflet-map"></div>
+  <div id="leaflet-map"  ></div>
 </template>
 
 <script>
     import Leaflet from 'leaflet'
     import markerClusterGroup from 'leaflet.markercluster'
     import mapProvider from '../utilities/leaflet.MapProviders.js'
+    import photo from '../utilities/Leaflet.Photo.js'
     import easyButton from '../utilities/leaflet.EasyButton.vue'
 
-    const MAP_IMAGE_PATH = "/assets/images/leaflet/";
-
+    // const MAP_IMAGE_PATH = "/assets/images/leaflet/";
+    let thiz;
     export default {
-        props: ['mapData'],
+        name:'leaflet-map',
         data() {
           return {
             map: null,
-            markers: null,
-            geoJsonLayer: null,
+            photoLayer: null,
             init_map_data: null,
             reset_btn: null,
             map_config: {
@@ -30,6 +30,7 @@
         },
 
         mounted() {
+          thiz = this;
           this.initMap();
           this.addMapLayer();
           this.addMapBtn();
@@ -39,7 +40,7 @@
         methods: {
           initMap() {
             // need set default L.Icon.Default.imagePath
-            L.Icon.Default.imagePath = MAP_IMAGE_PATH;
+            // L.Icon.Default.imagePath = MAP_IMAGE_PATH;
 
             this.map = L.map("leaflet-map",{
               center: this.map_config.center,
@@ -70,30 +71,45 @@
             this.reset_btn.disable();
           },
 
-          addClusterLayer(geoJsonData) {
-            // clear pervious layer
-            if(this.markers) {
-              this.markers.clearLayers();
+          addClusterLayer(resp) {
+            if ( resp && resp.items ) {
+              // clear pervious layer
+              if(this.photoLayer) {
+                this.photoLayer.clearLayers();
+              }
+
+              this.photoLayer = L.photo.cluster({ spiderfyDistanceMultiplier: 5})
+                .on('click', function (evt) {
+                  evt.layer.bindPopup(L.Util.template('<img src="{url}"/></a><p>{caption}</p>', evt.layer.photo), {
+                    className: 'leaflet-popup-photo',
+                    minWidth: 350
+                  }).openPopup();
+                });
+
+              let photos = [];
+              let data = resp.items;
+              for (let i = 0; i < data.length; i++) {
+                let photo = data[i].item.fields;
+                if (photo.abm_latLong) {
+                  let pos = photo.abm_latLong[0].split(',');
+                  photos.push({
+                    lat: pos[0],
+                    lng: pos[1],
+                    url: photo.delving_thumbnail[0],
+                    caption: (photo.delving_description ? photo.delving_description[0] : '') + ' - Kilde: <a href="' + photo.delving_landingPage + '">' + photo.delving_collection + '</a>',
+                    thumbnail: photo.delving_thumbnail[0]
+                  });
+                }
+              }
+
+              thiz.photoLayer.add(photos).addTo(thiz.map);
             }
-
-            this.markers = L.markerClusterGroup();
-
-            this.geoJsonLayer = L.geoJson(geoJsonData, {
-              onEachFeature: this.onEachFeature
-            });
-
-            this.markers.addLayer(this.geoJsonLayer);
-            this.markers.addTo(this.map);
-          },
-
-          onEachFeature(feature, layer) {
-            layer.bindPopup(feature.properties.name);
           },
 
           updateMapData(map_data) {
-            if(map_data.features.length !== 0) {
+            if(map_data.items !== 0) {
               this.addClusterLayer(map_data);
-              this.map.fitBounds(this.markers.getBounds());
+              this.map.fitBounds(this.photoLayer.getBounds());
             }
           },
 
@@ -141,6 +157,7 @@
     line-height: 30px;
     background-color: #fff;
   }
+
   #leaflet-map .easy-button-button .fa {
     vertical-align: 0;
     font-size: 1.3em;
@@ -148,7 +165,7 @@
 
   @media (max-width: 768px) {
     #leaflet-map {
-      height: 500px;
+      height: 535px;
     }
   }
 </style>

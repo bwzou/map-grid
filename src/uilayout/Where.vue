@@ -1,0 +1,123 @@
+<template>
+  <div class="main">
+    <div class="top-content">
+      哪儿
+    </div>
+    <div class="center-content">
+      <leaflet-map></leaflet-map>
+    </div>
+  </div>
+</template>
+
+<script>
+    import LeafletMap from '../uielements/LeafletMap.vue'
+    import reqwest from 'reqwest'
+
+    const direct_city = ['北京市', '天津市', '上海市', '重庆市'];
+    let thiz;
+    export default {
+      name: "where",    // 哪儿
+      data () {
+        return {
+          init_content_data: null,
+          data_url: 'http://kulturnett2.delving.org/api/search?query=*%3A*&format=jsonp&rows=100&pt=59.936%2C10.76&d=1&qf=abm_contentProvider_text%3ADigitaltMuseum',
+        };
+      },
+      methods: {
+        fetchData(url) {
+          // this.$http.get(url).then((response) => {
+          //   this.init_content_data = response.data;
+          //   this.dataInit();
+          // });
+
+          reqwest({
+            url: 'http://kulturnett2.delving.org/api/search?query=*%3A*&format=jsonp&rows=100&pt=59.936%2C10.76&d=1&qf=abm_contentProvider_text%3ADigitaltMuseum',
+            type: 'jsonp',
+            success: function (data) {
+              thiz.init_content_data = data.result;
+              thiz.dataInit();
+            }
+          });
+        },
+
+        initListenMsg() {
+          this.$bus.$on('area-select-update', (select_area) => {
+            this.filterSelectData(select_area);
+          });
+        },
+
+        filterSelectData(select_area) {
+          // select all province
+          if( select_area.province === 'all' ) {
+            this.notifyDataUpdate(this.init_content_data);
+            return;
+          }
+
+          let province_list = [];
+          let city_list = [];
+
+          // filter province
+          for(let el of this.init_content_data.features) {
+            let properties = el.properties;
+            if( properties.province === select_area.province ) {
+              province_list.push(el);
+            }
+          }
+
+          // filter city:
+          if(select_area.city !== "all") {
+            for(let el of province_list) {
+              let city_name = null;
+              // 分离是否为直辖市
+              if (direct_city.indexOf(select_area.province) === -1) {
+                city_name = el.properties.city
+              }
+              else {
+                city_name = el.properties.district
+              }
+
+              // 过滤本市数据
+              if (city_name === select_area.city) {
+                city_list.push(el)
+              }
+            }
+          }
+          else {
+            city_list = province_list;
+          }
+
+          let new_geojson_data = {
+            type: "FeatureCollection",
+            features: city_list
+          }
+
+          this.notifyDataUpdate(new_geojson_data);
+        },
+
+        dataInit() {
+          this.$bus.$emit('map-data-init', this.init_content_data);
+          this.$bus.$emit('searchbox-data-init', this.init_content_data);
+          // sidebar only need update
+          this.$bus.$emit('sidebar-data-update', this.init_content_data);
+        },
+
+        notifyDataUpdate(data) {
+          this.$bus.$emit('map-data-update', data);
+          this.$bus.$emit('sidebar-data-update', data);
+        },
+      },
+      mounted() {
+        thiz = this;
+        this.fetchData(this.data_url);
+        this.initListenMsg();
+      },
+      components: { LeafletMap },
+    }
+</script>
+
+<style scoped>
+  .top-content{
+    height: 50px;
+    width: 100%;
+  }
+</style>

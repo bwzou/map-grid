@@ -1,10 +1,10 @@
 <template>
-  <div>一起拼途</div>
+  <div>个人账户</div>
 </template>
 
 <script>
     export default {
-        name: "journey" //拼途、路途
+        name: "account"   // 我的
     }
 </script>
 
