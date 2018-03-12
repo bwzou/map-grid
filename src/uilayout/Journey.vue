@@ -1,5 +1,7 @@
 <template>
-  <div>一起拼途</div>
+  <div class="main">
+    <div class="top-content">一起拼途</div>
+  </div>
 </template>
 
 <script>
@@ -9,5 +11,9 @@
 </script>
 
 <style scoped>
-
+  .top-content{
+    height: 50px;
+    width: 100%;
+    background: #eaeaea;
+  }
 </style>

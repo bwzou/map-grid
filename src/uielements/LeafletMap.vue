@@ -30,6 +30,10 @@
         },
 
         mounted() {
+          document.getElementById('leaflet-map').style.height = document.documentElement.clientHeight - 105 + 'px';
+          window.onresize = (ev) => {
+            document.getElementById('leaflet-map').style.height = document.documentElement.clientHeight - 105 + 'px';
+          };
           thiz = this;
           this.initMap();
           this.addMapLayer();

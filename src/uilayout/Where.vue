@@ -119,5 +119,10 @@
   .top-content{
     height: 50px;
     width: 100%;
+    background: #eaeaea;
+  }
+  .center-content{
+    height: 100%;
+    width: 100%;
   }
 </style>
