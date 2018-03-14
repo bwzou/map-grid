@@ -1,5 +1,5 @@
 <template>
-  <div id="leaflet-map"  ></div>
+  <div id="leaflet_map"></div>
 </template>
 
 <script>
@@ -25,15 +25,16 @@
               minZoom: 3,
               maxZoom: 18,
               attribution: "&copy; 高德地图",
-            },
+            }
           };
         },
 
         mounted() {
-          document.getElementById('leaflet-map').style.height = document.documentElement.clientHeight - 105 + 'px';
+          document.getElementById('leaflet_map').style.height = document.documentElement.clientHeight - 105 + 'px';
           window.onresize = (ev) => {
-            document.getElementById('leaflet-map').style.height = document.documentElement.clientHeight - 105 + 'px';
+            document.getElementById('leaflet_map').style.height = document.documentElement.clientHeight - 105 + 'px';
           };
+
           thiz = this;
           this.initMap();
           this.addMapLayer();
@@ -46,7 +47,7 @@
             // need set default L.Icon.Default.imagePath
             // L.Icon.Default.imagePath = MAP_IMAGE_PATH;
 
-            this.map = L.map("leaflet-map",{
+            this.map = L.map("leaflet_map",{
               center: this.map_config.center,
               zoom: this.map_config.zoom,
               minZoom: this.map_config.minZoom,
@@ -84,10 +85,13 @@
 
               this.photoLayer = L.photo.cluster({ spiderfyDistanceMultiplier: 5})
                 .on('click', function (evt) {
-                  evt.layer.bindPopup(L.Util.template('<img src="{url}"/></a><p>{caption}</p>', evt.layer.photo), {
-                    className: 'leaflet-popup-photo',
-                    minWidth: 350
-                  }).openPopup();
+                  console.log(evt.layer.photo);
+                  // evt.layer.bindPopup(L.Util.template('<div><img src="{url}"/></a><p>{caption}</p></div>', evt.layer.photo), {
+                  //   className: 'leaflet-popup-photo',
+                  //   minWidth: 515
+                  // }).openPopup();
+
+                  thiz.$bus.$emit('show_detail_mask', evt.layer.photo);
                 });
 
               let photos = [];
@@ -141,19 +145,20 @@
                 this.reset_btn.disable();
               }
             });
-          },
+          }
         }
     }
 </script>
 
 <style>
-  #leaflet-map {
+
+  #leaflet_map {
     width: 100%;
     height: 810px;
   }
 
   /* icon style */
-  #leaflet-map .easy-button-button {
+  #leaflet_map .easy-button-button {
     border: none;
     border-radius: 2px;
     width: 30px;
@@ -162,14 +167,15 @@
     background-color: #fff;
   }
 
-  #leaflet-map .easy-button-button .fa {
+  #leaflet_map .easy-button-button .fa {
     vertical-align: 0;
     font-size: 1.3em;
   }
 
   @media (max-width: 768px) {
-    #leaflet-map {
+    #leaflet_map {
       height: 535px;
     }
   }
+
 </style>
